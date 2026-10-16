@@ -10,7 +10,8 @@ mkdirSync(join(out, 'controls'), { recursive: true });
 
 copyFileSync(join(three, 'build', 'three.module.js'), join(out, 'three.module.js'));
 copyFileSync(join(three, 'build', 'three.core.js'), join(out, 'three.core.js'));
-copyFileSync(join(three, 'examples', 'jsm', 'controls', 'OrbitControls.js'), join(out, 'controls', 'OrbitControls.js'));
+for (const f of ['OrbitControls.js', 'MapControls.js'])
+  copyFileSync(join(three, 'examples', 'jsm', 'controls', f), join(out, 'controls', f));
 copyFileSync(join(three, 'LICENSE'), join(out, 'THREE-LICENSE.txt'));
 const { version } = JSON.parse(readFileSync(join(three, 'package.json'), 'utf8'));
 console.log(`three ${version} → site/vendor`);

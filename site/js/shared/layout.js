@@ -9,6 +9,7 @@ export const MAX_PLOTS = 200_000;
 export const BLOCK_W = 6, BLOCK_D = 2;           // plots per block
 export const PITCH_X = BLOCK_W + 1.4, PITCH_Z = BLOCK_D + 1.2;   // block + street
 const SEGMENT_BLOCKS = 4;                         // a street changes its name every 4 blocks
+const PARK_SHARE = 0.07;                          // share of blocks left as olive gardens
 const SEED = 0x6a157;
 
 /** Coastline: everything west of this x (at a given z) is sea. */
@@ -44,21 +45,21 @@ export function buildLayout(maxPlots = MAX_PLOTS) {
   for (let bz = -range; bz <= range; bz++) {
     for (let bx = -range; bx <= range; bx++) {
       const x = bx * PITCH_X, z = bz * PITCH_Z;
-      const r = rand();   // drawn for every cell so the sequence never depends on what got excluded
+      const r = rand(), park = rand() < PARK_SHARE;   // drawn for every cell so the sequence never depends on exclusions
       if (x - PITCH_X / 2 < seaX(z) + 2) continue;
       if (LANDMARKS.some(l => overlaps(x, z, PITCH_X, PITCH_Z, l))) continue;
       const a = Math.atan2(z, x);
-      const lobes = 1 + 0.14 * Math.sin(3 * a + 0.6) + 0.08 * Math.sin(7 * a);
-      cells.push({ bx, bz, x, z, key: Math.hypot(x, z * 1.15) * lobes + r * 9 });
+      const lobes = 1 + 0.2 * Math.sin(3 * a + 0.6) + 0.1 * Math.sin(7 * a + 2);
+      cells.push({ bx, bz, x, z, park, key: Math.hypot(x, z * 1.1) * lobes + r * 22 });
     }
   }
   cells.sort((p, q) => p.key - q.key || p.bz - q.bz || p.bx - q.bx);
 
   const blocks = Math.ceil(maxPlots / (BLOCK_W * BLOCK_D));
-  if (cells.length < blocks) throw new Error('layout range too small');
   const px = new Float32Array(maxPlots), pz = new Float32Array(maxPlots);
   const facing = new Int8Array(maxPlots), street = new Uint32Array(maxPlots);
   const blockX = new Float32Array(blocks), blockZ = new Float32Array(blocks);
+  const parks = [];   // { x, z, after }: an olive-tree garden that appears once `after` houses exist
   const streetIds = new Map(), streetNames = [];
   const streetOf = (line, bx) => {
     const k = `${line}:${Math.floor(bx / SEGMENT_BLOCKS)}`;
@@ -67,9 +68,11 @@ export function buildLayout(maxPlots = MAX_PLOTS) {
     return id;
   };
 
-  let k = 0;
+  let k = 0, ci = 0;
   for (let b = 0; b < blocks; b++) {
-    const c = cells[b];
+    let c = cells[ci++];
+    while (c?.park) { parks.push({ x: c.x, z: c.z, after: k }); c = cells[ci++]; }
+    if (!c) throw new Error('layout range too small');
     blockX[b] = c.x; blockZ[b] = c.z;
     for (let row = 0; row < BLOCK_D && k < maxPlots; row++) {
       const s = streetOf(row === 0 ? c.bz : c.bz + 1, c.bx);
@@ -81,7 +84,7 @@ export function buildLayout(maxPlots = MAX_PLOTS) {
       }
     }
   }
-  return { count: maxPlots, x: px, z: pz, facing, street, streetNames, blockX, blockZ, landmarks: LANDMARKS };
+  return { count: maxPlots, x: px, z: pz, facing, street, streetNames, blockX, blockZ, parks, landmarks: LANDMARKS };
 }
 
 /** The address of house number n (1-based). */

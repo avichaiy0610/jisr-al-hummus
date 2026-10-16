@@ -35,6 +35,14 @@ test('plots never overlap, never sit in the sea or on a landmark', () => {
   }
 });
 
+test('olive gardens never take a plot and appear in growth order', () => {
+  const cells = new Set();
+  for (let k = 0; k < MAX_PLOTS; k++) cells.add(`${Math.round(full.x[k] / 7.4)},${Math.round(full.z[k] / 3.2)}`);
+  assert.ok(full.parks.length > 100);
+  for (const p of full.parks) assert.ok(!cells.has(`${Math.round(p.x / 7.4)},${Math.round(p.z / 3.2)}`));
+  for (let i = 1; i < full.parks.length; i++) assert.ok(full.parks[i].after >= full.parks[i - 1].after);
+});
+
 test('village grows outward from the centre', () => {
   const r = k => Math.hypot(full.x[k], full.z[k]);
   const avg = (a, b) => { let s = 0; for (let k = a; k < b; k++) s += r(k); return s / (b - a); };
