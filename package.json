@@ -1,0 +1,20 @@
+{
+  "name": "jisr-al-hummus",
+  "private": true,
+  "type": "module",
+  "description": "ג'יסר א-חומוס — כל עוקב מקבל בית",
+  "scripts": {
+    "test": "node --test tests/",
+    "start": "node tools/serve.mjs",
+    "update": "node tools/update.mjs",
+    "demo": "node tools/make-sample.mjs",
+    "vendor": "node tools/vendor.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "fflate": "^0.8.3",
+    "three": "^0.186.1"
+  }
+}
