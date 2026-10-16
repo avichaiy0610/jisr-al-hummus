@@ -25,7 +25,7 @@ export function createVillage(canvas, { layout, houses, vacant, labels }) {
   // How big is the village right now? R = radius of the built area, V = radius of the opening view.
   let R = 30;
   for (let k = 0; k < houses; k++) R = Math.max(R, Math.hypot(layout.x[k], layout.z[k]));
-  const V = Math.min(R, 55);
+  const V = Math.min(Math.max(R, 45), 55);
   const span = Math.max(400, R * 4);
   scene.fog = new THREE.Fog(sky, R * 1.6 + 120, R * 4.5 + 400);
 

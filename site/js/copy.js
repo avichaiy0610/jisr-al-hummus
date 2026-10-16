@@ -86,6 +86,7 @@ export const PEOPLE = {
   next: 'הבאים',
   jump: 'קפיצה למספר בית',
   vacant: 'פנוי',
+  back: 'חזרה לספר התושבים',
 };
 
 export const MORE = {

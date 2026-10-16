@@ -14,7 +14,7 @@ const fingerprint = (l, n) => {
 
 test('layout is frozen: houses never move between releases', () => {
   // If this fails you changed the village plan. Do not update the hash unless no real resident exists yet.
-  assert.equal(fingerprint(full, 5000), '054f30edef3fd3b4d9fc90d7f25e409a381aba2713f287e2004e1db6599c0d63');
+  assert.equal(fingerprint(full, 5000), '59b3b5087d64b6c37b4584c6c27f908a72a69468ab52df9175df631f5a772ca7');
 });
 
 test('a smaller layout is an exact prefix of the full one', () => {

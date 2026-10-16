@@ -138,6 +138,8 @@ export function initUI({ meta, layout, village }) {
     } else if (act === 'page') {
       peoplePage = Number(btn.dataset.p);
       renderPeople();
+    } else if (act === 'back') {
+      renderPeople();
     } else if (act === 'resident') {
       const k = Number(btn.dataset.n);
       village.flyToHouse(k);
@@ -147,7 +149,8 @@ export function initUI({ meta, layout, village }) {
 
   async function showHouse(n, known) {
     const owner = known !== undefined ? known : await ownerOf(n).catch(() => undefined);
-    show(houseCard(n, owner));
+    const back = tab === 'people' ? `<p><button class="btn ghost" data-act="back">${esc(PEOPLE.back)}</button></p>` : '';
+    show(houseCard(n, owner) + back);
   }
 
   // ---------- search ----------
