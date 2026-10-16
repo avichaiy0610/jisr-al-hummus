@@ -28,6 +28,7 @@ export function emitSite(reg, outDir) {
     day: history.length,
     history,
     page: PAGE,
+    vacant: residents.flatMap((r, k) => (r.u ? [] : [k + 1])),   // houses whose resident left; drawn grey
   };
   writeFileSync(join(outDir, 'meta.json'), JSON.stringify(meta, null, 1));
   return meta;

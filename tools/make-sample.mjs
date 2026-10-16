@@ -34,7 +34,7 @@ mkdirSync(join(root, 'exports'), { recursive: true });
 const days = [0.05, 0.2, 0.45, 0.7, 0.9, 1];
 days.forEach((share, d) => {
   const n = Math.floor(total * share);
-  const followers = all.slice(0, n).filter((_, i) => d === 3 || d === 5 || i % 97 !== 5);   // some leave on day 5 and come back on day 6
+  const followers = all.slice(0, n).filter((_, i) => (d === 3 || d === 5 || i % 97 !== 5) && !(d === 5 && i % 131 === 7));   // some leave on day 5 and come back on day 6, others leave on day 6
   const file = join(root, 'exports', 'sample-followers.json');
   writeFileSync(file, JSON.stringify(followers.map((u, i) => ({
     title: '', media_list_data: [], string_list_data: [{ href: `https://www.instagram.com/${u}`, value: u, timestamp: 1760000000 + i * 60 }],

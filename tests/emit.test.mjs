@@ -18,7 +18,7 @@ test('writes meta, 256 search shards and list pages', () => {
   emitSite(reg, out);
 
   assert.deepEqual(read(out, 'meta.json'),
-    { count: PAGE + 4, houses: PAGE + 5, updated: '2026-10-16', day: 2, history: reg.history, page: PAGE });
+    { count: PAGE + 4, houses: PAGE + 5, updated: '2026-10-16', day: 2, history: reg.history, page: PAGE, vacant: [2] });
   assert.equal(readdirSync(join(out, 'r')).length, 256);
   const shard = read(out, 'r', `${sha256Hex('u7').slice(0, 2)}.json`);
   assert.equal(shard.u7, 8);
