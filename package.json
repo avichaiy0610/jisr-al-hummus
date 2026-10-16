@@ -4,7 +4,7 @@
   "type": "module",
   "description": "ג'יסר א-חומוס — כל עוקב מקבל בית",
   "scripts": {
-    "test": "node --test tests/",
+    "test": "node --test \"tests/*.test.mjs\"",
     "start": "node tools/serve.mjs",
     "update": "node tools/update.mjs",
     "demo": "node tools/make-sample.mjs",
