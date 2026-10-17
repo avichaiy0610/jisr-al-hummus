@@ -27,7 +27,7 @@
    git push -u origin main
    ```
 4. בריפו נכנסים ל־**Settings → Pages**, ותחת **Source** בוחרים **GitHub Actions**.
-5. אחרי דקה־שתיים האתר עולה בכתובת `https://<שם-המשתמש>.github.io/jisr/`.
+5. אחרי דקה־שתיים האתר עולה. הכתובת שלנו: https://avichaiy0610.github.io/jisr-al-hummus/ (ריפו: https://github.com/avichaiy0610/jisr-al-hummus). ההקמה כבר בוצעה.
 6. כשעמוד האינסטגרם קיים, כותבים את שם המשתמש שלו ב־`INSTAGRAM_HANDLE` שבקובץ `site/js/copy.js`.
 
 ## עדכון התושבים (כל כמה ימים)
