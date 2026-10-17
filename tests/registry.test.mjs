@@ -31,10 +31,19 @@ test('a returning follower gets the old house back', () => {
   assert.equal(res.stats.added, 1);
 });
 
-test('refuses an export that lost more than half the residents unless forced', () => {
+test('refuses an update where too many residents leave at once, unless forced', () => {
+  const names = Array.from({ length: 1000 }, (_, i) => f(`u${i}`, i));
+  const reg = updateRegistry(null, names, { date: 'd1' }).reg;
+  // 100 leaving (10%) is fine; 101 is suspicious even when as many newcomers hide the drop.
+  assert.equal(updateRegistry(reg, names.slice(100), { date: 'd2' }).stats.left, 100);
+  const partial = [...names.slice(101), ...Array.from({ length: 500 }, (_, i) => f(`new${i}`, 5000 + i))];
+  assert.throws(() => updateRegistry(reg, partial, { date: 'd2' }), /--force/);
+  assert.equal(updateRegistry(reg, partial, { date: 'd2', force: true }).stats.left, 101);
+});
+
+test('small villages may lose a handful of residents without --force', () => {
   const reg = updateRegistry(null, ['a', 'b', 'c', 'd', 'e'].map(u => f(u)), { date: 'd1' }).reg;
-  assert.throws(() => updateRegistry(reg, [f('a'), f('b')], { date: 'd2' }), /--force/);
-  assert.equal(updateRegistry(reg, [f('a'), f('b')], { date: 'd2', force: true }).stats.active, 2);
+  assert.equal(updateRegistry(reg, [f('a')], { date: 'd2' }).stats.left, 4);
 });
 
 test('does not mutate the input registry', () => {

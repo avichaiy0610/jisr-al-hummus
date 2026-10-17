@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// npm run update -- <export.zip|followers_1.json> [--force] [--push]
+// npm run update -- <export.zip | followers_1.json [followers_2.json …]> [--force] [--push]
 // Reads the Instagram export, updates data/registry.json (append-only) and rewrites site/data.
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -12,13 +12,20 @@ import { emitSite } from './lib/emit.mjs';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 export function runUpdate({ file, force = false, registryPath, outDir, date = today() }) {
-  const followers = parseExport(file);
+  const { followers, skipped, files } = parseExport(file);
   const prev = existsSync(registryPath) ? JSON.parse(readFileSync(registryPath, 'utf8')) : null;
   const { reg, stats } = updateRegistry(prev, followers, { date, force });
-  mkdirSync(dirname(registryPath), { recursive: true });
-  writeFileSync(registryPath, JSON.stringify(reg));
-  emitSite(reg, outDir);
-  return stats;
+  emitSite(reg, outDir);   // site data first: if this fails, the registry is still the old one
+  writeRegistry(registryPath, reg);
+  return { ...stats, skipped, files };
+}
+
+// The registry is the one file that must never be half-written: keep a backup, write a temp file, then swap.
+function writeRegistry(path, reg) {
+  mkdirSync(dirname(path), { recursive: true });
+  if (existsSync(path)) copyFileSync(path, `${path}.bak`);
+  writeFileSync(`${path}.tmp`, JSON.stringify(reg));
+  renameSync(`${path}.tmp`, path);
 }
 
 function today() {
@@ -28,18 +35,20 @@ function today() {
 
 function main(argv) {
   const flags = new Set(argv.filter(a => a.startsWith('--')));
-  const file = argv.find(a => !a.startsWith('--'));
-  if (!file) {
+  const files = argv.filter(a => !a.startsWith('--'));
+  if (!files.length) {
     console.error('שימוש: npm run update -- <קובץ הייצוא מאינסטגרם (.zip או followers_1.json)> [--force] [--push]');
     process.exit(1);
   }
   try {
     const s = runUpdate({
-      file: resolve(file),
+      file: files.map(f => resolve(f)),
       force: flags.has('--force'),
       registryPath: join(root, 'data', 'registry.json'),
       outDir: join(root, 'site', 'data'),
     });
+    console.log(`נקראו: ${s.files.join(', ')}`);
+    if (s.skipped) console.warn(`⚠ ${s.skipped} רשומות בקובץ לא נראו כמו שם משתמש ודולגו. אם זה מספר גדול, כדאי לבדוק את הקובץ.`);
     console.log(`✔ העירייה עדכנה את הכפר:
   תושבים פעילים: ${s.active.toLocaleString('he-IL')}
   בתים חדשים:    ${s.added.toLocaleString('he-IL')}

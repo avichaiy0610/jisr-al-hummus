@@ -8,7 +8,7 @@ const cache = new Map();
 
 async function getJSON(path) {
   if (!cache.has(path)) {
-    cache.set(path, fetch(base + path + (meta?.updated ? `?v=${meta.updated}` : ''))
+    cache.set(path, fetch(base + path + (meta?.rev ? `?v=${meta.rev}` : ''))
       .then(r => { if (!r.ok) throw new Error(`${path}: ${r.status}`); return r.json(); })
       .catch(e => { cache.delete(path); throw e; }));
   }
@@ -18,6 +18,7 @@ async function getJSON(path) {
 export async function loadMeta() {
   const r = await fetch(base + 'meta.json', { cache: 'no-cache' });
   meta = r.ok ? await r.json() : { count: 0, houses: 0, day: 0, page: 1000, vacant: [] };
+  cache.clear();   // data files are keyed by meta.rev
   return meta;
 }
 
@@ -25,7 +26,8 @@ export async function loadMeta() {
 export async function findHouse(username) {
   if (!meta?.count) return null;
   const shard = await getJSON(`r/${sha256Hex(username).slice(0, 2)}.json`);
-  return shard[username] ?? null;
+  const n = Object.hasOwn(shard, username) ? shard[username] : null;   // "constructor" must not find a function
+  return Number.isInteger(n) && n >= 1 ? n : null;
 }
 
 /** The usernames of one page of houses (null = vacant). */

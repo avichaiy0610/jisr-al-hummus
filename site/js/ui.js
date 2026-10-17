@@ -63,7 +63,10 @@ export function initUI({ meta, layout, village }) {
   }
   new ResizeObserver(syncInset).observe(sheet);
   wide.addEventListener('change', syncInset);
-  function close() { sheet.hidden = true; setTab(null); syncInset(); }
+  // Every render takes a ticket. An answer that arrives after the user moved on (another tab, a newer search) is dropped.
+  let gen = 0;
+  const ticket = () => ++gen;
+  function close() { ticket(); sheet.hidden = true; setTab(null); syncInset(); }
   function show(html, name = tab) {
     setTab(name);
     body.innerHTML = html;
@@ -148,13 +151,16 @@ export function initUI({ meta, layout, village }) {
   });
 
   async function showHouse(n, known) {
+    const t = ticket();
     const owner = known !== undefined ? known : await ownerOf(n).catch(() => undefined);
+    if (t !== gen) return;
     const back = tab === 'people' ? `<p><button class="btn ghost" data-act="back">${esc(PEOPLE.back)}</button></p>` : '';
     show(houseCard(n, owner) + back);
   }
 
   // ---------- search ----------
   function renderSearch(prefill = '') {
+    ticket();
     if (!meta.count) { show(`<h2>${esc(SEARCH.title)}</h2><p class="msg">${esc(SEARCH.empty)}</p>${followLink()}`, 'search'); return; }
     show(`
       <h2>${esc(SEARCH.title)}</h2>
@@ -172,8 +178,10 @@ export function initUI({ meta, layout, village }) {
     const u = normalize(raw);
     if (!u) { out.innerHTML = `<p class="msg err">${esc(SEARCH.invalid)}</p>`; return; }
     out.innerHTML = `<p class="msg">${esc(SEARCH.busy)}</p>`;
+    const t = ticket();
     let n;
     try { n = await findHouse(u); } catch { n = null; }
+    if (t !== gen) return;
     if (!n) { out.innerHTML = `<p class="msg err">${esc(SEARCH.notFound(u))}</p>${followLink()}`; return; }
     out.innerHTML = houseCard(n, u);
     out.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -182,12 +190,14 @@ export function initUI({ meta, layout, village }) {
 
   // ---------- my house ----------
   async function renderMine() {
+    const t = ticket();
     const mine = store.get();
     if (!mine?.n) {
       show(`<h2>${esc(MINE.title)}</h2><p class="lead">${esc(MINE.none)}</p><button class="btn" data-act="find">${esc(MINE.find)}</button>`, 'mine');
       return;
     }
     const owner = await ownerOf(mine.n).catch(() => undefined);
+    if (t !== gen) return;
     show(`<h2>${esc(MINE.title)}</h2>${houseCard(mine.n, owner)}
       <p><button class="btn ghost" data-act="forget">${esc(MINE.forget)}</button></p>`, 'mine');
     village.flyToHouse(mine.n);
@@ -195,12 +205,14 @@ export function initUI({ meta, layout, village }) {
 
   // ---------- residents book ----------
   async function renderPeople() {
+    const t = ticket();
     const per = meta.page, pages = Math.max(1, Math.ceil(meta.houses / per));
     peoplePage = Math.min(Math.max(0, peoplePage), pages - 1);
     const from = peoplePage * per + 1, to = Math.min(meta.houses, from + per - 1);
     let rows = '';
     if (meta.houses) {
       const list = await listPage(peoplePage).catch(() => []);
+      if (t !== gen) return;
       rows = list.map((u, i) => `<li><button data-act="resident" data-n="${from + i}">
         <span class="n">${fmt(from + i)}</span>
         ${u ? `<span class="u">@${esc(u)}</span>` : `<span class="vac">${esc(PEOPLE.vacant)}</span>`}
@@ -226,6 +238,7 @@ export function initUI({ meta, layout, village }) {
 
   // ---------- more ----------
   function renderMore() {
+    ticket();
     const sections = MORE.sections.map(s => `<h3>${esc(s.title)}</h3>${
       s.body ? s.body.map(p => `<p>${esc(p)}</p>`).join('') : `<ol>${s.list.map(i => `<li>${esc(i)}</li>`).join('')}</ol>`}`).join('');
     const credits = MORE.credits.map(([name, url, note]) =>

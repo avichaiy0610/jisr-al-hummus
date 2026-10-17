@@ -185,7 +185,10 @@ export function createVillage(canvas, { layout, houses, vacant, labels }) {
     ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(ndc, camera);
     const hit = ray.intersectObject(walls, false)[0];
-    if (hit?.instanceId !== undefined) pickCb(hit.instanceId + 1);
+    if (hit?.instanceId === undefined) return;
+    const k = hit.instanceId;
+    ring.position.x = layout.x[k]; ring.position.z = layout.z[k]; ring.visible = true;
+    pickCb(k + 1);
   });
 
   // Panels cover part of the screen; shift the picture so what we fly to sits in the middle of the free area.
